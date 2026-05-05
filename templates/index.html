@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Strona z pogodą</title>
+    <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      background: #ffffff;
+      display: flex; align-items: center; justify-content: center;
+      color: #1a2a4a;
+  }
+  .card {
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 32px rgba(59,130,246,0.10);
+  }
+  h1 { font-size: 1.8rem; margin-bottom: 1.5rem; text-align: center; letter-spacing: 1px; color: #1e3a5f; }
+  select {
+      width: 100%;
+      padding: .75rem 1rem;
+      margin-bottom: 1rem;
+      background: #ffffff;
+      border: 1px solid #93c5fd;
+      color: #1a2a4a;
+      font-size: 1rem;
+      cursor: pointer;
+  }
+  select option { background: #ffffff; color: #1a2a4a; }
+  button {
+      width: 100%; padding: .85rem; background: #1d4ed8;
+      border: none;
+      color: #fff;
+      font-size: 1.05rem; font-weight: 600; cursor: pointer;
+      transition: background .2s;
+  }
+  button:hover { background: #1e40af; }
+  .weather-box {
+    margin-top: 1.8rem; padding: 1.5rem;
+    background: #eff6ff; text-align: center;
+    border: 1px solid #bfdbfe;
+  }
+  .weather-box img { width: 80px; }
+  .temp { font-size: 3rem; font-weight: 700; color: #1e3a5f; }
+  .description { font-size: 1.1rem; margin: .3rem 0; color: #374151; }
+  .meta { font-size: .9rem; opacity: .65; margin-top: .3rem; }
+  .details { margin-top: 1.2rem; text-align: center; }
+  .details p { font-size: 1rem; color: #1a2a4a; padding: .35rem 0; border-bottom: 1px solid #bfdbfe; }
+  .details p:last-child { border-bottom: none; }
+  .details span { font-weight: 600; }
+  .error { color: #dc2626; margin-top: 1rem; text-align: center; font-size: .9rem; }
+</style>
+</head>
+<body>
+    <div class="card">
+        <h1>Pogoda</h1>
+        <form method="POST">
+            <select name="country" id="country" onchange="updateCities()">
+                <option value="">Wybierz państwo</option>
+                {% for country in locations %}
+                <option value="{{ country }}" {% if country == selected_country %}selected{% endif %}>
+                    {{ country }}
+                </option>
+                {% endfor %}
+            </select>
+            <select name="city" id="city">
+                <option value="">Wybierz miasto</option>
+                {% if selected_country %}
+                {% for city in locations[selected_country] %}
+                <option value="{{ city }}" {% if city == selected_city %}selected{% endif %}>
+                    {{ city }}
+                </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button type="submit">Pobierz pogodę</button>
+        </form>
+
+        {% if error %}
+        <p class="error"> {{ error }}</p>
+        {% endif %}
+
+        {% if weather %}
+         <div class="weather-box">
+             <img src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png" alt="ikona"/>
+             <div class="temp">{{ weather.temp | round(1) }}°C</div>
+             <div class="description">{{ weather.description }}</div>
+             <div class="meta">{{ weather.city }}, {{ weather.country }}</div>
+             <div class="details">
+                 <p>Odczuwalna temperatura: <span>{{ weather.feels_like | round(1) }}°C</span></p>
+                 <p>Wilgotność: <span>{{ weather.humidity }}%</span></p>
+                 <p>Wiatr: <span>{{ weather.wind_speed }} m/s</span></p>
+                 <p>Ciśnienie: <span>{{ weather.pressure }} hPa</span></p>
+            </div>
+         </div>
+        {% endif %}
+    </div>
+<script>
+    const locations = {{ locations | tojson }};
+    function updateCities() {
+        const country = document.getElementById('country').value;
+        const city = document.getElementById('city');
+        city.innerHTML = '<option value="">Wybierz miasto</option';
+        (locations[country] || {}).forEach(c => {
+            const o = document.createElement('option');
+            o.value = o.textContent = c;
+            city.appendChild(o);
+        });
+    }
+</script>
+</body>
+</html>
