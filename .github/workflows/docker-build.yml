@@ -20,6 +20,10 @@ jobs:
       # 1. Pobranie kodu źródłowego z repozytorium
       - name: Checkout repository
         uses: actions/checkout@v4
+    
+        # Konwersja nazwy repo na małe litery – wymagane przez ghcr.io
+      - name: Set lowercase image name
+        run: echo "IMAGE_NAME_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       # 2. Konfiguracja QEMU – potrzebne do emulacji arm64 na amd64
       - name: Set up QEMU
@@ -62,7 +66,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/${{ github.repository }}:scan
+          tags: ghcr.io/${{ env.IMAGE_NAME_LOWER }}:scan
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pawcho-sawicki:cache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/pawcho-sawicki:cache,mode=max
 
@@ -72,7 +76,7 @@ jobs:
       - name: Run Trivy CVE scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ghcr.io/${{ github.repository }}:scan
+          image-ref: ghcr.io/${{ env.IMAGE_NAME_LOWER }}:scan
           format: table
           exit-code: '1'
           ignore-unfixed: true
